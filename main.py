@@ -1,6 +1,7 @@
 import os
 import time
 import logging
+import multiprocessing as mp
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -759,6 +760,15 @@ async def ide_submit(payload: IDESubmitRequest):
     }
 
 
+def _exec_candidate_in_worker(code: str, safe_builtins: dict, out_q):
+    namespace = {"__builtins__": safe_builtins}
+    try:
+        exec(compile(code, "<candidate>", "exec"), namespace)  # noqa: S102
+        out_q.put({"ok": True, "namespace": namespace})
+    except Exception as e:
+        out_q.put({"ok": False, "error": str(e)[:200]})
+
+
 def run_test_cases(code: str, problem: dict) -> list:
     """
     Runs candidate code against test cases in a hardened sandbox.
@@ -824,15 +834,30 @@ def run_test_cases(code: str, problem: dict) -> list:
         "ValueError": ValueError, "TypeError": TypeError,
         "IndexError": IndexError, "KeyError": KeyError,
     }
-    namespace = {"__builtins__": safe_builtins}
-
-    # ── 3. Execute in restricted namespace ─────────────────────
-    try:
-        exec(compile(code, "<candidate>", "exec"), namespace)  # noqa: S102
-    except Exception as e:
-        return [{"case": i+1, "passed": False, "error": str(e)[:200],
+    # ── 3. Execute in isolated subprocess with timeout ─────────
+    out_q = mp.Queue()
+    proc = mp.Process(target=_exec_candidate_in_worker, args=(code, safe_builtins, out_q))
+    proc.start()
+    proc.join(2)
+    if proc.is_alive():
+        proc.terminate()
+        proc.join()
+        return [{"case": i+1, "passed": False, "error": "Execution timed out.",
                  "input": str(tc["input"]), "expected": str(tc["expected"]), "got": "—"}
                 for i, tc in enumerate(problem["test_cases"])]
+
+    if out_q.empty():
+        return [{"case": i+1, "passed": False, "error": "Execution failed.",
+                 "input": str(tc["input"]), "expected": str(tc["expected"]), "got": "—"}
+                for i, tc in enumerate(problem["test_cases"])]
+
+    worker_result = out_q.get()
+    if not worker_result.get("ok"):
+        return [{"case": i+1, "passed": False, "error": worker_result.get("error", "Execution error."),
+                 "input": str(tc["input"]), "expected": str(tc["expected"]), "got": "—"}
+                for i, tc in enumerate(problem["test_cases"])]
+
+    namespace = worker_result["namespace"]
 
     # ── 4. Find candidate's solution function ──────────────────
     fn = None
