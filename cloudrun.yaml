@@ -1,0 +1,42 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: cogni
+spec:
+  template:
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      containers:
+        - image: gcr.io/YOUR_PROJECT_ID/cogni:latest
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          env:
+            # ── Set these in Cloud Run console or via gcloud secrets ──
+            - name: GROQ_API_KEY
+              value: ""          # Set via: --set-env-vars or Secret Manager
+            - name: GROQ_MODEL
+              value: "llama-3.3-70b-versatile"
+            - name: DEMO_USERNAME
+              value: "admin"
+            - name: DEMO_PASSWORD
+              value: ""          # Set via: --set-env-vars or Secret Manager
+            - name: TRUST_PROXY
+              value: "true"      # Cloud Run sits behind Google's proxy
+            - name: ENABLE_DOCS
+              value: "true"
+            - name: LIMIT_AUTH_PER_MIN
+              value: "5"
+            - name: LIMIT_PUBLIC_PER_MIN
+              value: "30"
+            - name: LIMIT_AUTH_USER_PER_MIN
+              value: "120"
+            - name: ALLOWED_ORIGINS
+              value: "https://cogni-XXXX-uc.a.run.app"  # Update after first deploy
+  traffic:
+    - percent: 100
+      latestRevision: true

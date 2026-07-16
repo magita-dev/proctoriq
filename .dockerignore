@@ -1,0 +1,12 @@
+# Never include secrets or local state
+.env
+system_siege.db
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.git/
+.gitignore
+.vscode/
+.qodo/
+README.md
