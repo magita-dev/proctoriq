@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>System Siege — Integrity Engine</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <!-- HEADER -->
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">⚔️</span>
+        <span class="logo-text">System <strong>Siege</strong></span>
+      </div>
+      <nav>
+        <a href="#demo">Demo</a>
+        <a href="#audit">Custom Audit</a>
+        <a href="/ide">💻 IDE</a>
+        <a href="#settings">⚙ Settings</a>
+        <a href="/docs" target="_blank">API Docs</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>AI Assessment <span class="accent">Integrity Engine</span></h1>
+      <p>Real-time fraud detection for technical assessments. Keystroke analysis, AST plagiarism checking, stylometrics, and AI interview consistency — all in one trust graph.</p>
+      <div class="hero-btns">
+        <a href="#demo" class="btn btn-primary">Run Demo</a>
+        <a href="#audit" class="btn btn-outline">Custom Audit</a>
+      </div>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-num" id="stat-analyzed">0</span><span class="stat-label">Submissions Analyzed</span></div>
+      <div class="stat"><span class="stat-num" id="stat-flagged">0</span><span class="stat-label">Flags Detected</span></div>
+      <div class="stat"><span class="stat-num">4</span><span class="stat-label">Analysis Engines</span></div>
+    </div>
+  </section>
+
+  <!-- DEMO SECTION -->
+  <section id="demo" class="section">
+    <div class="section-header">
+      <h2>Live Demo Candidates</h2>
+      <p>Click a candidate to run the full integrity audit against the backend.</p>
+    </div>
+    <div class="preset-cards">
+      <!-- Aria -->
+      <div class="preset-card" id="card-aria">
+        <div class="card-badge safe">HONEST</div>
+        <div class="card-avatar">👩‍💻</div>
+        <h3>Aria Sterling</h3>
+        <p class="card-role">Full Stack Engineer</p>
+        <p class="card-desc">Typed incrementally. Clear explanations. Consistent style with past submissions.</p>
+        <button class="btn btn-primary btn-full" onclick="runPreset('aria')">Audit Aria</button>
+      </div>
+      <!-- Devon -->
+      <div class="preset-card" id="card-devon">
+        <div class="card-badge danger">CHEATER</div>
+        <div class="card-avatar">🕵️</div>
+        <h3>Devon Carter</h3>
+        <p class="card-role">Backend Engineer</p>
+        <p class="card-desc">Pasted entire solution. ChatGPT artifacts detected. Explanation doesn't match code.</p>
+        <button class="btn btn-danger btn-full" onclick="runPreset('devon')">Audit Devon</button>
+      </div>
+      <!-- Marcus -->
+      <div class="preset-card" id="card-marcus">
+        <div class="card-badge warning">BORDERLINE</div>
+        <div class="card-avatar">🧑‍💼</div>
+        <h3>Marcus Vance</h3>
+        <p class="card-role">Database Developer</p>
+        <p class="card-desc">Multiple tab switches and paste detected. Claims router dropout. Appeals available.</p>
+        <button class="btn btn-warning btn-full" onclick="runPreset('marcus')">Audit Marcus</button>
+      </div>
+    </div>
+
+    <!-- RESULTS PANEL -->
+    <div id="results-panel" class="results-panel hidden">
+      <div class="results-header">
+        <div>
+          <h2 id="res-name">—</h2>
+          <p id="res-role" class="res-role">—</p>
+        </div>
+        <div id="res-badge" class="verdict-badge">—</div>
+      </div>
+
+      <!-- SCORE GAUGES -->
+      <div class="scores-grid">
+        <div class="score-card">
+          <div class="score-label">Overall Risk</div>
+          <div class="score-ring" id="ring-overall"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="42"/><circle class="fill" id="ring-overall-fill" cx="50" cy="50" r="42"/></svg><span id="ring-overall-val">0%</span></div>
+        </div>
+        <div class="score-card">
+          <div class="score-label">AST Similarity</div>
+          <div class="score-ring" id="ring-sim"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="42"/><circle class="fill" id="ring-sim-fill" cx="50" cy="50" r="42"/></svg><span id="ring-sim-val">0%</span></div>
+        </div>
+        <div class="score-card">
+          <div class="score-label">Velocity Risk</div>
+          <div class="score-ring" id="ring-vel"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="42"/><circle class="fill" id="ring-vel-fill" cx="50" cy="50" r="42"/></svg><span id="ring-vel-val">0%</span></div>
+        </div>
+        <div class="score-card">
+          <div class="score-label">Style Risk</div>
+          <div class="score-ring" id="ring-style"><svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="42"/><circle class="fill" id="ring-style-fill" cx="50" cy="50" r="42"/></svg><span id="ring-style-val">0%</span></div>
+        </div>
+      </div>
+
+      <!-- TRUST GRAPH -->
+      <div class="trust-graph-section">
+        <h3>Explainable Trust Graph</h3>
+        <div id="trust-graph-nodes" class="trust-graph-nodes"></div>
+      </div>
+
+      <!-- SKILL RADAR -->
+      <div class="radar-section">
+        <h3>Candidate Skill DNA</h3>
+        <div id="radar-bars" class="radar-bars"></div>
+      </div>
+
+      <!-- TELEMETRY -->
+      <div class="telemetry-section">
+        <h3>Telemetry Breakdown</h3>
+        <div id="telemetry-detail" class="telemetry-detail"></div>
+      </div>
+
+      <!-- HUMANE EVAL -->
+      <div class="humane-section" id="humane-section">
+        <h3>Humane Evaluation</h3>
+        <div id="humane-detail"></div>
+      </div>
+
+      <!-- APPEAL PANEL (shown for borderline) -->
+      <div id="appeal-panel" class="appeal-panel hidden">
+        <h3>⚖️ Submit Appeal</h3>
+        <textarea id="appeal-reason" placeholder="Enter candidate's appeal reason..."></textarea>
+        <div class="appeal-btns">
+          <button class="btn btn-outline" onclick="submitAppeal()">Submit Appeal</button>
+          <button class="btn btn-primary" id="resolve-btn" onclick="resolveAppeal()" style="display:none">✅ Approve Appeal</button>
+          <button class="btn btn-danger" id="reject-btn" onclick="rejectAppeal()" style="display:none">❌ Reject Appeal</button>
+        </div>
+        <div id="appeal-status" class="appeal-status"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CUSTOM AUDIT SECTION -->
+  <section id="audit" class="section section-dark">
+    <div class="section-header">
+      <h2>Custom Submission Audit</h2>
+      <p>Paste any candidate's code and explanation to get a live integrity report.</p>
+    </div>
+    <div class="audit-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Candidate ID</label>
+          <input type="text" id="custom-id" placeholder="e.g. john_doe_1" />
+        </div>
+        <div class="form-group">
+          <label>Paste Count</label>
+          <select id="custom-pasted">
+            <option value="no">No paste detected</option>
+            <option value="yes">Paste detected</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tab Switches</label>
+          <input type="number" id="custom-tabs" value="0" min="0" max="50" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group full">
+          <label>Candidate Code</label>
+          <textarea id="custom-code" rows="8" placeholder="def solution(s):&#10;    # paste candidate code here"></textarea>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group full">
+          <label>Reference Solution</label>
+          <textarea id="custom-ref" rows="6" placeholder="def reference(s):&#10;    # paste reference solution here"></textarea>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group full">
+          <label>Candidate's Explanation</label>
+          <textarea id="custom-explanation" rows="3" placeholder="Describe your approach in 3-4 sentences..."></textarea>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-lg" onclick="runCustomAudit()">
+        🚀 Run Integrity Audit
+      </button>
+    </div>
+    <div id="custom-results" class="custom-results hidden"></div>
+  </section>
+
+  <!-- VOICE DEMO -->
+  <section class="section">
+    <div class="section-header">
+      <h2>AI Voice Engine</h2>
+      <p>Text-to-Speech synthesis and Speech-to-Text transcription powered by gTTS.</p>
+    </div>
+    <div class="voice-demo">
+      <div class="voice-card">
+        <h3>🔊 Text → Speech</h3>
+        <textarea id="tts-text" rows="3" placeholder="Type something to synthesize...">Explain your algorithm approach in 3 to 4 sentences.</textarea>
+        <button class="btn btn-primary" onclick="runTTS()">Synthesize Speech</button>
+        <div id="tts-result" class="voice-result"></div>
+      </div>
+      <div class="voice-card">
+        <h3>🎤 Speech → Text</h3>
+        <p class="voice-hint">Simulates STT transcription from base64 audio payload.</p>
+        <button class="btn btn-outline" onclick="runSTT()">Run Transcription Demo</button>
+        <div id="stt-result" class="voice-result"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SETTINGS / BYOK -->
+  <section id="settings" class="section section-dark">
+    <div class="section-header">
+      <h2>⚙ AI Configuration</h2>
+      <p>Plug in your own API key. No key is stored to disk or logged server-side.</p>
+    </div>
+    <div class="settings-card">
+      <div class="llm-status-bar" id="llm-status-bar">
+        <span id="llm-status-dot" class="status-dot unconfigured"></span>
+        <span id="llm-status-text">LLM not configured — interview scoring uses rule-based fallback</span>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>AI Provider</label>
+          <select id="cfg-provider" onchange="onProviderChange()">
+            <option value="groq">Groq (Recommended — free)</option>
+            <option value="openai">OpenAI</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Model</label>
+          <select id="cfg-model">
+            <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
+            <option value="llama3-8b-8192">llama3-8b-8192 (faster)</option>
+            <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
+            <option value="gpt-4o">gpt-4o (OpenAI)</option>
+            <option value="gpt-4o-mini">gpt-4o-mini (OpenAI)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group full">
+          <label>API Key <span style="color:var(--muted);font-weight:400">(stored in memory only, never written to disk)</span></label>
+          <div class="key-input-row">
+            <input type="password" id="cfg-apikey" placeholder="gsk_... or sk-..." autocomplete="off" />
+            <button class="btn btn-outline" onclick="toggleKeyVisibility()">👁</button>
+          </div>
+        </div>
+      </div>
+      <div class="settings-footer">
+        <button class="btn btn-primary btn-lg" onclick="saveConfig()">💾 Save & Activate</button>
+        <a href="https://console.groq.com/keys" target="_blank" class="btn btn-outline">Get Free Groq Key →</a>
+      </div>
+      <div id="cfg-result" class="cfg-result"></div>
+      <div class="settings-info">
+        <h4>Disclosure</h4>
+        <p><strong>Provider:</strong> Groq &nbsp;|&nbsp; <strong>Model:</strong> llama-3.3-70b-versatile (Meta Llama 3.3) &nbsp;|&nbsp; <strong>Used for:</strong> Interview consistency scoring, AI-artifact stylometric classification</p>
+        <p>All other engines (AST similarity, velocity, syntax analysis) are deterministic rule-based systems — no LLM involved.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>System Siege Integrity Engine &nbsp;|&nbsp; Backend: FastAPI &nbsp;|&nbsp; <a href="/docs" target="_blank">API Docs</a></p>
+  </footer>
+
+  <div id="toast" class="toast hidden"></div>
+  <div id="loader" class="loader hidden"><div class="spinner"></div><p id="loader-msg">Analyzing...</p></div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>System Siege — Live Coding IDE</title>
+  <link rel="stylesheet" href="/static/css/style.css"/>
+  <link rel="stylesheet" href="/static/css/ide.css"/>
+</head>
+<body class="ide-body">
+
+<!-- TOP BAR -->
+<div class="ide-topbar">
+  <div class="ide-logo"><a href="/">⚔️ System Siege</a></div>
+  <div class="ide-problem-selector">
+    <select id="problem-select" onchange="loadProblem(this.value)">
+      <option value="">— Select a Problem —</option>
+    </select>
+    <span id="problem-difficulty" class="diff-badge"></span>
+  </div>
+  <div class="ide-candidate-row">
+    <input type="text" id="candidate-id" placeholder="Candidate ID (e.g. john_doe)" maxlength="50"/>
+    <select id="lang-select">
+      <option value="python">Python</option>
+    </select>
+  </div>
+  <div class="ide-topbar-actions">
+    <button class="btn btn-outline btn-sm" onclick="resetCode()">↺ Reset</button>
+    <button class="btn btn-primary btn-sm" onclick="submitSolution()">▶ Submit</button>
+  </div>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="ide-layout">
+
+  <!-- LEFT: PROBLEM PANEL -->
+  <div class="ide-panel ide-problem-panel" id="panel-problem">
+    <div class="panel-tabs">
+      <button class="ptab active" onclick="switchPTab('description', this)">Description</button>
+      <button class="ptab" onclick="switchPTab('results', this)">Results</button>
+      <button class="ptab" onclick="switchPTab('integrity', this)">🔍 Integrity</button>
+    </div>
+
+    <!-- Description -->
+    <div id="ptab-description" class="ptab-content active">
+      <div id="problem-title-display" class="prob-title">Select a problem to begin</div>
+      <div id="problem-tags" class="prob-tags"></div>
+      <div id="problem-description-display" class="prob-desc"></div>
+    </div>
+
+    <!-- Test Results -->
+    <div id="ptab-results" class="ptab-content hidden">
+      <div id="test-summary" class="test-summary"></div>
+      <div id="test-cases-display" class="test-cases-list"></div>
+    </div>
+
+    <!-- Integrity Analysis -->
+    <div id="ptab-integrity" class="ptab-content hidden">
+      <div id="integrity-panel" class="integrity-panel">
+        <p class="integrity-placeholder">Submit your solution to see the integrity report.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTRE: MONACO EDITOR -->
+  <div class="ide-panel ide-editor-panel">
+    <div class="editor-toolbar">
+      <span class="editor-lang-tag">Python 3</span>
+      <span id="telemetry-indicator" class="tele-indicator">● Recording</span>
+      <span id="char-count" class="char-count">0 chars</span>
+    </div>
+    <div id="monaco-editor" style="width:100%;height:100%;"></div>
+  </div>
+
+  <!-- RIGHT: CHATBOT PANEL -->
+  <div class="ide-panel ide-chat-panel">
+    <div class="chat-header">
+      <span>🤖 AI Assistant</span>
+      <div class="chat-mode-btns">
+        <button class="mode-btn active" data-mode="hint" onclick="setMode('hint', this)" title="Get a hint">💡 Hint</button>
+        <button class="mode-btn" data-mode="explain" onclick="setMode('explain', this)" title="Explain a concept">📖 Explain</button>
+        <button class="mode-btn" data-mode="assess" onclick="setMode('assess', this)" title="Assess my code">🔎 Assess</button>
+        <button class="mode-btn" data-mode="chat" onclick="setMode('chat', this)" title="General chat">💬 Chat</button>
+      </div>
+    </div>
+    <div class="chat-messages" id="chat-messages">
+      <div class="chat-msg bot">
+        <div class="msg-bubble">
+          👋 Hi! I'm your coding assistant.<br><br>
+          Use <strong>💡 Hint</strong> when you're stuck, <strong>📖 Explain</strong> for concepts, <strong>🔎 Assess</strong> to review your code, or just <strong>💬 Chat</strong> about anything.<br><br>
+          Configure your Groq API key in <a href="/#settings">Settings</a> to activate me.
+        </div>
+      </div>
+    </div>
+    <div class="chat-input-row">
+      <textarea id="chat-input" rows="2" placeholder="Ask for a hint, explain a concept, or ask me anything..." onkeydown="chatKeydown(event)"></textarea>
+      <button class="btn btn-primary chat-send-btn" onclick="sendChat()">Send</button>
+    </div>
+
+    <!-- Explanation Q&A for submission -->
+    <div class="chat-qa-section">
+      <div class="qa-header">📝 Post-Submit Explanation</div>
+      <textarea id="explanation-input" rows="3" placeholder="After submitting, explain your approach in 2-3 sentences. This feeds into the integrity score..."></textarea>
+    </div>
+  </div>
+
+</div>
+
+<!-- SUBMIT OVERLAY -->
+<div id="submit-overlay" class="submit-overlay hidden">
+  <div class="submit-modal">
+    <div class="submit-spinner"><div class="spinner"></div></div>
+    <p id="submit-msg">Running test cases & integrity analysis...</p>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<!-- Monaco Editor CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+<script src="/static/js/ide.js"></script>
+</body>
+</html>
