@@ -144,7 +144,7 @@ def llm_evaluate_interview(code: str, qa_responses: list) -> dict:
     except Exception as e:
         logger.error(f"LLM interview eval failed: {e}", exc_info=True)
         fallback = _rule_based_interview(code, qa_responses)
-        fallback["reasoning"] = f"LLM call failed ({e}); rule-based fallback used."
+        fallback["reasoning"] = "LLM evaluation temporarily unavailable; rule-based fallback used."
         return fallback
 
 
@@ -200,7 +200,7 @@ def llm_classify_style(code: str, history_codes: list, rule_result: dict) -> dic
         return enhanced
     except Exception as e:
         logger.error(f"LLM style classification failed: {e}", exc_info=True)
-        rule_result["llm_style_verdict"] = f"LLM call failed ({e}); rule-based result used."
+        rule_result["llm_style_verdict"] = "LLM style analysis unavailable; rule-based result used."
         return rule_result
 
 
