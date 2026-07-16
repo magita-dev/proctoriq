@@ -707,6 +707,11 @@ async def ide_submit(payload: IDESubmitRequest):
     if not problem:
         raise HTTPException(status_code=404, detail="Problem not found.")
 
+    # Block all while loops to prevent emergency sandbox DoS
+    code_clean = payload.code.replace(" ", "")
+    if "while" in code_clean:
+        return {"status": "error", "message": "While loops are restricted in this assessment environment. Please use a standard 'for' loop."}
+
     # --- Run test cases via restricted exec ---
     test_results = run_test_cases(payload.code, problem)
 
