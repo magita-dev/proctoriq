@@ -467,7 +467,7 @@ def score_logic(code: str, test_results: list, reference_code: str) -> dict:
     code_lower = code.lower()
 
     # Has a function definition
-    has_def = bool(re.search(r'\bdef\s+\w+', code))
+    
     if has_def:
         algo_score += 5
         algo_reasons.append("+5: Solution is wrapped in a proper function definition.")
