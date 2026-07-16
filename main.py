@@ -772,6 +772,58 @@ async def ide_submit(payload: IDESubmitRequest):
     }
 
 
+def _validate_candidate_code(code: str) -> Optional[str]:
+    """
+    Validate candidate code against a strict AST allowlist before execution.
+    Returns None if valid, otherwise an error message.
+    """
+    import ast as _ast
+
+    try:
+        tree = _ast.parse(code)
+    except SyntaxError as e:
+        return f"Syntax error: {str(e)[:120]}"
+
+    allowed_nodes = (
+        _ast.Module, _ast.FunctionDef, _ast.arguments, _ast.arg, _ast.Return,
+        _ast.Assign, _ast.AugAssign, _ast.AnnAssign,
+        _ast.Name, _ast.Load, _ast.Store, _ast.Constant,
+        _ast.Expr, _ast.Call,
+        _ast.BinOp, _ast.UnaryOp, _ast.BoolOp, _ast.Compare,
+        _ast.Add, _ast.Sub, _ast.Mult, _ast.Div, _ast.FloorDiv, _ast.Mod, _ast.Pow,
+        _ast.USub, _ast.UAdd, _ast.Not,
+        _ast.Eq, _ast.NotEq, _ast.Lt, _ast.LtE, _ast.Gt, _ast.GtE, _ast.In, _ast.NotIn,
+        _ast.And, _ast.Or,
+        _ast.If, _ast.For, _ast.Break, _ast.Continue, _ast.Pass,
+        _ast.List, _ast.Tuple, _ast.Dict, _ast.Set, _ast.Subscript, _ast.Slice,
+        _ast.ListComp, _ast.SetComp, _ast.DictComp, _ast.GeneratorExp, _ast.comprehension,
+    )
+
+    allowed_calls = {
+        "abs", "all", "any", "bool", "dict", "enumerate", "float", "int", "len",
+        "list", "map", "max", "min", "pow", "range", "reversed", "round", "set",
+        "sorted", "str", "sum", "tuple", "zip"
+    }
+
+    for node in _ast.walk(tree):
+        if not isinstance(node, allowed_nodes):
+            return f"Disallowed syntax: {type(node).__name__}"
+
+        if isinstance(node, _ast.Attribute):
+            return "Attribute access is not allowed."
+
+        if isinstance(node, _ast.Name) and node.id.startswith("__"):
+            return "Use of dunder names is not allowed."
+
+        if isinstance(node, _ast.Call):
+            if not isinstance(node.func, _ast.Name):
+                return "Only direct function calls are allowed."
+            if node.func.id not in allowed_calls:
+                return f"Call to '{node.func.id}' is not allowed."
+
+    return None
+
+
 def run_test_cases(code: str, problem: dict) -> list:
     """
     Runs candidate code against test cases in a hardened sandbox.
@@ -838,6 +890,12 @@ def run_test_cases(code: str, problem: dict) -> list:
         "IndexError": IndexError, "KeyError": KeyError,
     }
     namespace = {"__builtins__": safe_builtins}
+
+    validation_error = _validate_candidate_code(code)
+    if validation_error:
+        return [{"case": i+1, "passed": False, "error": validation_error[:200],
+                 "input": str(tc["input"]), "expected": str(tc["expected"]), "got": "—"}
+                for i, tc in enumerate(problem["test_cases"])]
 
     # ── 3. Execute in restricted namespace ─────────────────────
     try:
