@@ -368,9 +368,9 @@ def evaluate_humane_approach(code: str) -> dict:
     syntax_error_details = ""
     try:
         ast.parse(code)
-    except Exception as e:
+    except Exception:
         syntax_valid = False
-        syntax_error_details = str(e)
+        syntax_error_details = "Syntax error detected."
 
     logic_score = 0
     code_lower = code.lower()
